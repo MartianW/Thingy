@@ -1,0 +1,13 @@
+Thingy, the IRC bot. Completely rewritten from scratch.
+Initial aims:
+Hosting these game independently:
+C9
+Assassins
+Lyncher mafia (http://mafiascum.net/wiki/index.php?title=Lyncher_Mafia)
+Supporter for vote counting to assist a human mod with a PYP
+
+Short Term goals:
+IRC client class
+Vote counting added
+Game class
+Getting the IRC client class and Game class to talk to each other, possibly with a Thingy class
