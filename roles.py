@@ -47,7 +47,7 @@ class Vanilla_Role(Role):
 		self.doctored = False
 		
 	def action_vote(self, Target):
-		
+		pass
 
 class Mafia(Vanilla_Role):
 	"""Standard mafia goon"""
