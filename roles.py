@@ -1,11 +1,18 @@
+"""Roles module. This modules contains the various roles for hosting"""
+
+from game import *
+
 class Manual_Action(Exception):
 	"""Thrown when there's no automated method for handling a night action. The Game class catches and asks the moderator what to do"""
 
 class Role:
+	"""Base role class. Only counts votes to assist a human moderator"""
 	def __init__(self, pname):
 		self.name = "Role"
 		self.pname = pname
 		self.alignment = None
+		
+	#TODO: Vote counting
 	
 class Vanilla_Role(Role):
 	"""General Vanilla_Role class, for vannila games"""
@@ -31,6 +38,9 @@ class Vanilla_Role(Role):
 	def reset(self):
 		self.killed = False
 		self.doctored = False
+		
+	def action_vote(self, Target):
+		
 
 class Mafia(Vanilla_Role):
 	"""Standard mafia goon"""
@@ -76,24 +86,29 @@ class Doctor(Vanilla_Role):
 			raise Manual_Action("%s %ss %s" % (self.pname, "doctor", target.pname))
 
 class Paranoid_gunowner(Vanilla_Role):
+	"""Paranoid gun owner. Kills whoever targets him"""
+	def __init__(self, pname):
+		Vanilla_Role.__init__(self, pname)
+		self.name = "Paranoid Gun Owner"
+		
 	def reaction_cop(self, targetingCop):
 		targetingCop.killed = True
 
-m = Mafia("P1")
-t = Townie("P2")
-c = Cop("P3")
-x = Role("P4")
-"""
-try:
-	c.action_cop(m)
-	c.action_cop(t)
-	c.action_cop(x)
-except Manual_Action as MA:
-	print MA
-	
-try:
-	m.action_mafia_kill(c)
-	m.action_mafia_kill(t)
-	m.action_mafia_kill(x)
-except Manual_Action as MA:
-	print MA"""
+if __name__ == "__main__":
+	m = Mafia("P1")
+	t = Townie("P2")
+	c = Cop("P3")
+	x = Role("P4")
+	try:
+		c.action_cop(m)
+		c.action_cop(t)
+		c.action_cop(x)
+	except Manual_Action as MA:
+		print MA
+		
+	try:
+		m.action_mafia_kill(c)
+		m.action_mafia_kill(t)
+		m.action_mafia_kill(x)
+	except Manual_Action as MA:
+		print MA
