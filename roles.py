@@ -1,5 +1,12 @@
-"""Roles module. This modules contains the various roles for hosting"""
+"""Roles module. This modules contains the various roles for hosting.
 
+List of roles so far:
+
+Role (no actions, no reactions, doesn't even check for life)
+Vanilla_Role (no actions, but monitors life or death)
+Vanilla_Cop (investigation)
+"""
+from base import *
 from game import *
 
 class Manual_Action(Exception):
@@ -11,7 +18,7 @@ class Role:
 		self.name = "Role"
 		self.pname = pname
 		self.alignment = None
-		
+	
 	#TODO: Vote counting
 	
 class Vanilla_Role(Role):
@@ -86,7 +93,8 @@ class Doctor(Vanilla_Role):
 			raise Manual_Action("%s %ss %s" % (self.pname, "doctor", target.pname))
 
 class Paranoid_gunowner(Vanilla_Role):
-	"""Paranoid gun owner. Kills whoever targets him"""
+	"""Paranoid gun owner. Kills any cop that targets him"""
+	#this class is intended as a demo for reactions
 	def __init__(self, pname):
 		Vanilla_Role.__init__(self, pname)
 		self.name = "Paranoid Gun Owner"
