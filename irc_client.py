@@ -11,21 +11,25 @@ owner = 'Martin'
 server = 'irc.foonetic.net'
 port = 6667
 channel = '#Thingy'
+rawlog = True
 
 class IRC_Client:
 	"""IRC stuff. Initialization takes a Thingy object, which it calls with relevant events"""
 	def __init__(self, bot):
+		if rawlog: self.rlog = open('raw.log','w') #For logging
+		
 		self.bot = bot
 		self.socket = socket() #Socket class
 		self.socket.connect((server, port)) #Connect
 		
+		print "Connecting to the server..."
 		#Next two lines are required by IRC protocol to be first thing sent
 		self.send('NICK %s' % nick) #Choose nickname
 		self.send('USER %s * * :A bot of %s.' % (nick, owner)) #choose user name.
-		
+
 	def send(self, msg):
 		"""For sending a message to the IRC server. Attaches \r\n and prints debugging info."""
-		print '=> %s' % msg.rstrip()
+		if rawlog: print >> self.rlog, '=> %s' % msg.rstrip()
 		self.socket.send(msg + '\r\n')
 		
 	def join(self, chan):
@@ -42,7 +46,7 @@ class IRC_Client:
 
 			for rawl in temp:
 				rawl = rawl.rstrip() #Remove trailing \r\n
-				print "<= " + rawl
+				if rawlog: print >> self.rlog, "<= " + rawl
 				line = rawl.split(" ") #Split for easier parsing
 				
 				#Respond to pings
@@ -50,13 +54,15 @@ class IRC_Client:
 					self.send("PONG " + line[1]) #Reply PONG :<data>
 	
 				#Once connected, do stuff
-				elif line[1] == "376": #IRC server signals end of MoTD in format <server> 367 <nick> <msg> 
+				elif line[1] == "001": #IRC server signals welcome message in format <server> 001 <nick> <msg> 
 					self.send("MODE " + nick + " +B") #Mark ourselves as a bot
 					self.send("PRIVMSG NICKSERV IDENTIFY " + password) #Identify with Nickserv
+					print "Connected to the server."
 	
 				#We've received a notice from nickserv
 				elif (line[0].startswith(":NickServ") and line[1] == "NOTICE" and line[2] == nick):
 					if (' '.join(line[3:]) == ":Password accepted -- you are now recognized."): #We're logged in
+						print "Identified with NickServ, now joining main channel."
 						self.join(channel)
 				
 				#We've received a message in a channel or pm. (PRIVMSG is for channels as well.)
@@ -65,6 +71,15 @@ class IRC_Client:
 						private = True #It's a private message
 					else:
 						private = False #It was said in a channel
-					sender = line[0].split("!")[0] #Extract the sender's nick
-					msg = line[3][1:] #Extract the actual message
+					sender = line[0].split("!")[0][1:] #Extract the sender's nick
+					msg = ' '.join(line[3:])[1:] #Extract the actual message
 					self.bot.msg(sender, msg, private) #Pass the message along
+					
+
+if __name__ == "__main__":
+	class Test:
+		def msg(self, sender, msg, private):
+			print sender, msg, private
+
+	i = IRC_Client(Test())
+	i.loop()
