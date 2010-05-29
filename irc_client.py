@@ -15,9 +15,7 @@ rawlog = True
 
 class IRC_Client:
 	"""IRC stuff. Initialization takes a Thingy object, which it calls with relevant events"""
-	def __init__(self, bot):
-		if rawlog: self.rlog = open('raw.log','w') #For logging
-		
+	def __init__(self, bot):		
 		self.bot = bot
 		self.socket = socket() #Socket class
 		self.socket.connect((server, port)) #Connect
@@ -25,11 +23,11 @@ class IRC_Client:
 		print "Connecting to the server..."
 		#Next two lines are required by IRC protocol to be first thing sent
 		self.send('NICK %s' % nick) #Choose nickname
-		self.send('USER %s * * :A bot of %s.' % (nick, owner)) #choose user name.
+		self.send('USER %s * * :A bot of %s.' % (owner, owner)) #choose user name.
 
 	def send(self, msg):
 		"""For sending a message to the IRC server. Attaches \r\n and prints debugging info."""
-		if rawlog: print >> self.rlog, '=> %s' % msg.rstrip()
+		if rawlog: print '=> %s' % msg.rstrip()
 		self.socket.send(msg + '\r\n')
 		
 	def join(self, chan):
@@ -46,7 +44,7 @@ class IRC_Client:
 
 			for rawl in temp:
 				rawl = rawl.rstrip() #Remove trailing \r\n
-				if rawlog: print >> self.rlog, "<= " + rawl
+				if rawlog: print "<= " + rawl
 				line = rawl.split(" ") #Split for easier parsing
 				
 				#Respond to pings
@@ -74,8 +72,13 @@ class IRC_Client:
 					sender = line[0].split("!")[0][1:] #Extract the sender's nick
 					msg = ' '.join(line[3:])[1:] #Extract the actual message
 					self.bot.msg(sender, msg, private) #Pass the message along
-					
 
+        def announce(self, msg): #Announce something to every channel the bot is in
+                self.sayTo(self, msg, channel) #For now the bot is always in one channel, but later this may change. E.g. dead players lounge
+
+        def sayTo(self, msg, target): #Say something to a specific person
+                self.send("PRIVMSG %s %s" % (target, msg))
+        
 if __name__ == "__main__":
 	class Test:
 		def msg(self, sender, msg, private):
