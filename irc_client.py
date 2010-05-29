@@ -15,16 +15,21 @@ rawlog = True
 
 class IRC_Client:
 	"""IRC stuff. Initialization takes a Thingy object, which it calls with relevant events"""
-	def __init__(self, bot):		
-		self.bot = bot
+	def __init__(self, interface):
+                self.interface = interface
 		self.socket = socket() #Socket class
 		self.socket.connect((server, port)) #Connect
+                self.running = True
 		
 		print "Connecting to the server..."
 		#Next two lines are required by IRC protocol to be first thing sent
 		self.send('NICK %s' % nick) #Choose nickname
 		self.send('USER %s * * :A bot of %s.' % (owner, owner)) #choose user name.
-
+        
+        @property
+        def bot(self):
+                return self.interface.bot
+        
 	def send(self, msg):
 		"""For sending a message to the IRC server. Attaches \r\n and prints debugging info."""
 		if rawlog: print '=> %s' % msg.rstrip()
@@ -37,7 +42,7 @@ class IRC_Client:
 	def loop(self):
 		"""Main loop for handling input from the socket. Thread blocking."""
 		readbuffer = ''
-		while True:
+		while self.running:
 			readbuffer = readbuffer + self.socket.recv(1024) #Top up the buffer
 			temp = readbuffer.split("\n")
 			readbuffer = temp.pop( ) #The last line is possibly half read
@@ -73,8 +78,11 @@ class IRC_Client:
 					msg = ' '.join(line[3:])[1:] #Extract the actual message
 					self.bot.msg(sender, msg, private) #Pass the message along
 
+        def end(self):
+                self.socket.close()
+
         def announce(self, msg): #Announce something to every channel the bot is in
-                self.sayTo(self, msg, channel) #For now the bot is always in one channel, but later this may change. E.g. dead players lounge
+                self.sayTo(msg, channel) #For now the bot is always in one channel, but later this may change. E.g. dead players lounge
 
         def sayTo(self, msg, target): #Say something to a specific person
                 self.send("PRIVMSG %s %s" % (target, msg))
