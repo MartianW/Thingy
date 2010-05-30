@@ -11,7 +11,8 @@ owner = 'Martin'
 server = 'irc.foonetic.net'
 port = 6667
 channel = '#Thingy'
-rawlog = True
+rawlog = False
+modeValues = {'+': 1, '%': 2, '@': 3, '&':4}
 
 class IRC_Client:
 	"""IRC stuff. Initialization takes a Thingy object, which it calls with relevant events"""
@@ -20,7 +21,9 @@ class IRC_Client:
 		self.socket = socket() #Socket class
 		self.socket.connect((server, port)) #Connect
                 self.running = True
-		
+		self.namesResult = [] #Used for buffering information returned from names request
+                self.modes = {} #Dictionary for storing users and their modes
+                
 		print "Connecting to the server..."
 		#Next two lines are required by IRC protocol to be first thing sent
 		self.send('NICK %s' % nick) #Choose nickname
@@ -51,7 +54,7 @@ class IRC_Client:
 				rawl = rawl.rstrip() #Remove trailing \r\n
 				if rawlog: print "<= " + rawl
 				line = rawl.split(" ") #Split for easier parsing
-				
+                                
 				#Respond to pings
 				if line[0] == "PING": #IRC server pings in the format PING :<data>
 					self.send("PONG " + line[1]) #Reply PONG :<data>
@@ -75,9 +78,56 @@ class IRC_Client:
 					else:
 						private = False #It was said in a channel
 					sender = line[0].split("!")[0][1:] #Extract the sender's nick
-					msg = ' '.join(line[3:])[1:] #Extract the actual message
-					self.bot.msg(sender, msg, private) #Pass the message along
-
+					msg = ' '.join(line[3:])[1:] #Patch together the actual message from the list of words
+                                        try:
+                                                mode = self.modes[sender]
+                                                self.bot.msg(sender, msg, private, mode) #Pass the message along
+                                        except KeyError: #If the user isn't in the channel and therefore not in modes, ignore him. This will hopefully prevent abuse
+                                                pass
+                                        
+                                elif (line[1] == "JOIN") and (line[0].split("!", 1)[0] != ':' + nick): #A user joined. Second bit is to check that it isn't the bot joining the channel (in which case, the server automatically sends a names list without a request)
+                                        self.refreshMembers() #Refresh the memberlist
+                                        print "A user joined"
+                                
+                                elif line[1] == "PART": #A user parted.
+                                        self.refreshMembers()
+                                        print "A user parted"
+                                        
+                                elif line[1] == "KICK": #A user was kicked
+                                        self.refreshMembers()
+                                        print "A user was kicked"
+                                        
+                                elif line[1] == "QUIT": #A user quit
+                                        self.refreshMembers()
+                                        print "A user quit"
+                                        
+                                elif line[1] == "NICK": #A user changed their nick
+                                        self.refreshMembers()
+                                        print "A user changed their nick"
+                                        
+                                elif (line[1] == "MODE") and (line[2] == channel): #A user's mode was changed. line[2] must equal channel, otherwise thingy twigs on setting itself +B
+                                        self.refreshMembers()
+                                        print "A user's mode was changed"
+                                
+                                elif line[1] == "353": #A partial or full list of names in the channel
+                                        line[5] = line[5][1:] #Chopping off : in front of first name
+                                        self.namesResult.extend(line[5:]) #Names start at the sixth word
+                                        
+                                elif line[1] == "366": #Indicates end of sending names
+                                        for name in self.namesResult:
+                                                if name[0] in modeValues:
+                                                        self.modes[name[1:]] = modeValues[name[0]] #get number for each mode
+                                                else:
+                                                        self.modes[name] = 0 #No mode
+                                        self.namesResult = [] #Clear the buffer
+                                        print "Modes reloaded:"
+                                        for user in self.modes:
+                                                print "%s: level %s." % (user, self.modes[user])
+                                        
+        def refreshMembers(self):
+                """Requests a new memberlist from the server"""
+                self.send("NAMES %s" % channel)
+                                
         def end(self):
                 self.socket.close()
 

@@ -17,13 +17,13 @@ class Thingy(object):
         def client(self):
                 return self.interface.client
         
-        def msg(self, sender, msg, private):
+        def msg(self, sender, msg, private, mode):
                 if msg[0] == "!": #It starts with an exclamation mark, so it's a command
                         line = msg.split(" ") #Split for easier parsing
                         action = line[0][1:] #Trimming the !
                         args = line[1:]
                         if (self.game != None): #If a game object exists, the command must be for it
-                                #self.game.action(action, args) #Pass it along
+                                #self.game.action(sender, action, args, mode) #Pass it along
                                 pass
                         elif action == "start":
                                 if (args[0].lower() == "c9"): #Todo: Replace with dictionary of setups and names
@@ -39,12 +39,18 @@ class Thingy(object):
                                 elif args[0] == "Client":
                                         self.test = True
                                         self.interface.reloadClient()
+                                elif args[0] == "All":
+                                        self.interface.reset()
                         elif action == "test": #For testing if Thingy keeps its state between reloads"
                                 if self.test:
                                         self.say("Success!")
                                 else:
                                         self.say("Failure!")
                                        
+        def end(self):
+                """This is called when the game is over, by game itself."""
+                self.game = None
+                
         def say(self, msg): #Say to everyone
                 self.client.announce(msg)
                 

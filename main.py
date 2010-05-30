@@ -23,6 +23,15 @@ class ThingyIRCInterface():
     def run(self):
         while True:
             self.irc.loop()
+            
+    def reset(self):
+        """Restart the program remotely. Used when both Thingy and IRC_Client are changed"""
+        reload(irc_client)
+        reload(base)
+        self.irc.running = False
+        self.irc.end()
+        self.irc = irc_client.IRC_Client(self)
+        self.thingy = base.Thingy(self)
 
     #Making the names more general
     @property
