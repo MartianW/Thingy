@@ -1,17 +1,19 @@
-import base
+import sys
+import copy
+import thingy
 import irc_client
 
 class ThingyIRCInterface():
-    """An interface between Thingy and the IRC_Client, so that they don't have to know about each other and can thingyh be reloaded independently.
+    """An interface between Thingy and the IRC_Client, so that they don't have to know about each other and can thingy can be reloaded independently.
     (Reloading the IRC Client would reset the connection, but not lose the game info, while reloading thingy does the opposite)"""
     def __init__(self):
+        self.thingy = thingy.Thingy(self)
         self.irc = irc_client.IRC_Client(self)
-        self.thingy = base.Thingy(self)
         
     def reloadThingy(self):
         print "Reloading thingy"
-        reload(base)
-        self.thingy = base.Thingy(self)
+        reload(thingy)
+        self.thingy = thingy.Thingy(self)
         
     def reloadClient(self):
         print "Reloading IRC_Client"
@@ -27,11 +29,11 @@ class ThingyIRCInterface():
     def reset(self):
         """Restart the program remotely. Used when both Thingy and IRC_Client are changed"""
         reload(irc_client)
-        reload(base)
+        reload(thingy)
         self.irc.running = False
         self.irc.end()
         self.irc = irc_client.IRC_Client(self)
-        self.thingy = base.Thingy(self)
+        self.thingy = thingy.Thingy(self)
 
     #Making the names more general
     @property
@@ -42,5 +44,5 @@ class ThingyIRCInterface():
     def client(self):
         return self.irc
 
-thingy = ThingyIRCInterface()
-thingy.run()
+t = ThingyIRCInterface()
+t.run()
