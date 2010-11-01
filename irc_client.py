@@ -89,7 +89,10 @@ class IRC_Client:
                                         
                                         sender = line[0].split("!")[0][1:] #Extract the sender's nick
                                         msg = ' '.join(line[3:])[1:] #Patch together the actual message from the list of words and chop off the leading ':'
-                                        mode = self.modes[sender]
+                                        if (sender in self.modes):
+                                                mode = self.modes[sender]
+                                        else:
+                                                mode = 0
                                         
                                         event = events.Message()
                                         event.sender = sender

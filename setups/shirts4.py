@@ -25,7 +25,8 @@ class Shirts_Random(Voter):
                 
         def gameStart(self):
                 Voter.gameStart(self)
-                sk_name = self.game.get_role(random.choice("Sane", "Delusional", "SK", "Random"))
+                saw = random.choice(["Sane", "Delusional", "SK", "Random"])
+                sk_name = self.game.get_role(saw)
                 self.game.tell("Role: Witness", self.game.names[self])
                 self.game.tell("You: " + self.description, self.game.names[self])
                 self.game.tell("You saw: " + self.game.roles[sk_name].description, self.game.names[self])
@@ -61,8 +62,8 @@ class Shirts_SerialKiller(Voter):
 
 class Game_Shirts4(Game):
         def __init__(self, players, announce, tell, commentary, gameover):
-                roles = [Shirts_Delusional, Shirts_Sane, Shirts_SerialKiller, Shirts_Random]
-                rolenames = [('Sane', 'Sane'), ('Delusional', 'Sane'), ('Serial Killer', 'Serial Killer')]
+                roles = [Shirts_Random, Shirts_Delusional, Shirts_Sane, Shirts_SerialKiller]
+                rolenames = [('Random', 'Sane'), ('Delusional', 'Sane'), ('Sane', 'Sane'), ('Serial Killer', 'Serial Killer')]
                 self.descriptions = ["Red Shirt", "Green Shirt", "Blue Shirt", "Yellow Shirt"]
                 announce("Colours: " + ", ".join(self.descriptions))
                 random.shuffle(self.descriptions)
